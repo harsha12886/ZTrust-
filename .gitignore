@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Datasets & Partitions (No datasets in repository)
+archive/
+*/archive/
+data/
+main/data/
+*.csv
+*.tsv
+*.parquet
+*.feather
+
+# Private Keys & Sensitive Credentials
+*_private.pem
+keys/*_private.pem
+main/keys/*_private.pem
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE & OS Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Model artifacts & caches
+*.joblib
+*.pkl
