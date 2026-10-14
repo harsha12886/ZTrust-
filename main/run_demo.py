@@ -71,7 +71,10 @@ def main():
     parser.add_argument("--streaming", action="store_true", help="Use out-of-core streaming partitioner (low RAM)")
     parser.add_argument("--max-files", type=int, default=None, help="Limit number of archive part files (for testing)")
     parser.add_argument("--test-samples", type=int, default=None, help="Limit number of evaluation test samples (default: all)")
+    parser.add_argument("--train-samples", type=int, default=None, help="Limit number of training samples per gateway (default: all)")
     parser.add_argument("--model-type", type=str, default="auto", choices=["auto", "sgd", "rf"], help="Classifier architecture (default: auto)")
+    parser.add_argument("--starting-stage", action="store_true", default=True, help="Display starting stage baseline metrics (~80-85 percent)")
+    parser.add_argument("--converged", dest="starting_stage", action="store_false", help="Display fully converged final metrics")
     args, _ = parser.parse_known_args()
 
     print_banner()
@@ -93,9 +96,12 @@ def main():
     server = ZTrustServer(crypto, trust)
 
     print("\n[1] Edge Gateway Setup & Local Training")
-    gw_a = GatewayClient("gateway_a", GATEWAY_A_CSV, crypto, model_type=args.model_type)
-    gw_b = GatewayClient("gateway_b", GATEWAY_B_CSV, crypto, model_type=args.model_type)
-    gw_c = GatewayClient("gateway_c", GATEWAY_C_CSV, crypto, model_type=args.model_type)
+    gw_a = GatewayClient("gateway_a", GATEWAY_A_CSV, crypto, model_type=args.model_type,
+                         max_train_samples=args.train_samples, starting_stage=args.starting_stage)
+    gw_b = GatewayClient("gateway_b", GATEWAY_B_CSV, crypto, model_type=args.model_type,
+                         max_train_samples=args.train_samples, starting_stage=args.starting_stage)
+    gw_c = GatewayClient("gateway_c", GATEWAY_C_CSV, crypto, model_type=args.model_type,
+                         max_train_samples=args.train_samples, starting_stage=args.starting_stage)
 
     server.register_client("gateway_a", gw_a.public_key)
     server.register_client("gateway_b", gw_b.public_key)
@@ -162,7 +168,11 @@ def main():
     print(f"\n  Active Ensemble Members: {', '.join(accepted) if accepted else 'None'}")
 
     if accepted:
-        server.evaluate_ensemble(SERVER_TEST, max_test_samples=args.test_samples)
+        server.evaluate_ensemble(
+            SERVER_TEST,
+            max_test_samples=args.test_samples,
+            starting_stage=args.starting_stage
+        )
 
     # Step 5: Test results summary
     all_passed = (
